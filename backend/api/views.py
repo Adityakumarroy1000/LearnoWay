@@ -1,9 +1,10 @@
+# api/views.py
+from rest_framework import viewsets
+from .models import Course
+from .serializers import CourseSerializer
 from django.shortcuts import render
 
-# Create your views here.
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-
-@api_view(["GET"])
-def hello(request):
-    return Response({"message": "Hello from Django!"})
+class CourseViewSet(viewsets.ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    

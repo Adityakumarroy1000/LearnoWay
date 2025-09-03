@@ -1,19 +1,39 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BookOpen, Target, TrendingUp, Users, User, ArrowRight, Star, Zap } from "lucide-react";
+import {
+  BookOpen,
+  Target,
+  TrendingUp,
+  Users,
+  User,
+  ArrowRight,
+  Star,
+  Zap,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+
+const fetchMessage = async () => {
+  const response = await axios.get("http://127.0.0.1:8000/api/courses/");
+  return response.data.message;
+};
 
 const Index = () => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/api/hello/")
+      .get("http://127.0.0.1:8000/api/courses/")
       .then((res) => setMessage(res.data.message))
       .catch((err) => console.error(err));
   }, []);
@@ -29,6 +49,8 @@ const Index = () => {
       setUserProfile(JSON.parse(profile));
     }
   }, []);
+  const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const profile = localStorage.getItem("userProfile");
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
@@ -50,7 +72,7 @@ const Index = () => {
       duration: "3-6 months",
       color: "from-blue-500 to-purple-600",
       difficulty: "Beginner",
-      rating: 4.8
+      rating: 4.8,
     },
     {
       id: 2,
@@ -61,7 +83,7 @@ const Index = () => {
       duration: "2-4 months",
       color: "from-green-500 to-teal-600",
       difficulty: "Intermediate",
-      rating: 4.7
+      rating: 4.7,
     },
     {
       id: 4,
@@ -72,15 +94,35 @@ const Index = () => {
       duration: "6-12 months",
       color: "from-amber-500 to-orange-600",
       difficulty: "Beginner",
-      rating: 4.9
-    }
+      rating: 4.9,
+    },
   ];
 
   const stats = [
-    { icon: Users, label: "Active Learners", value: "50,000+", color: "text-blue-600 dark:text-blue-400" },
-    { icon: BookOpen, label: "Free Resources", value: "10,000+", color: "text-green-600 dark:text-green-400" },
-    { icon: Target, label: "Skills Available", value: "25+", color: "text-purple-600 dark:text-purple-400" },
-    { icon: TrendingUp, label: "Success Rate", value: "87%", color: "text-orange-600 dark:text-orange-400" }
+    {
+      icon: Users,
+      label: "Active Learners",
+      value: "50,000+",
+      color: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      icon: BookOpen,
+      label: "Free Resources",
+      value: "10,000+",
+      color: "text-green-600 dark:text-green-400",
+    },
+    {
+      icon: Target,
+      label: "Skills Available",
+      value: "25+",
+      color: "text-purple-600 dark:text-purple-400",
+    },
+    {
+      icon: TrendingUp,
+      label: "Success Rate",
+      value: "87%",
+      color: "text-orange-600 dark:text-orange-400",
+    },
   ];
 
   return (
