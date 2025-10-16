@@ -1,0 +1,75 @@
+/* Strong, specific rules for AdminLTE + nested-admin inlines */
+
+/* overall inline group (separates Path block from Roadmap block) */
+.content-wrapper .inline-group,
+.content-wrapper .nested-inline .inline-group,
+.card .inline-group,
+.inline-group,
+.nested_inline .inline-group,
+.nested-inline .inline-group {
+    margin-top: 30px !important;
+    padding: 14px !important;
+    border-top: 1px solid #e6e6e6 !important;
+    background: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* each inline row/card */
+.inline-related,
+.nested-inline .inline-related,
+.card .inline-related {
+    margin-bottom: 14px !important;
+    padding: 10px 12px !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 6px !important;
+    background: #fbfbfb !important;
+}
+
+/* heading/label area inside inline (if present) */
+.inline-related h2,
+.inline-related h3,
+.inline-related .module h2,
+.nested-inline .inline-related h2 {
+    background: #007bff !important;
+    /* AdminLTE primary blue */
+    color: #fff !important;
+    padding: 8px 10px !important;
+    margin: -10px -12px 8px -12px !important;
+    border-radius: 6px 6px 0 0 !important;
+}
+
+/* column widths for TabularInline fields */
+.inline-related .field-title input,
+.inline-related .field-title textarea,
+.inline-related .field-micro_desc input,
+.inline-related .field-micro_desc textarea {
+    width: 320px !important;
+}
+
+/* smaller columns */
+.inline-related .field-duration input,
+.inline-related .field-sub_map_count input,
+.inline-related .field-time input {
+    width: 110px !important;
+}
+
+/* ensure admin labels readable */
+.inline-related .form-row label,
+.inline-group .form-row label {
+    font-weight: 600 !important;
+    color: #333 !important;
+    display: block !important;
+}
+
+/* Add extra spacing between Path block and its nested Roadmaps */
+.inline-group+.inline-group,
+.nested-inline+.inline-group {
+    margin-top: 28px !important;
+}
+
+/* last-resort: make sure visibility */
+.admin-form .inline-group,
+.inline-group {
+    visibility: visible !important;
+}

@@ -5,8 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, BookOpen, Clock, Target, TrendingUp, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-import ThemeToggle from "@/components/ThemeToggle";
-
+import CustomNav from "@/components/CustomNavbar";
 const Dashboard = () => {
   const userStats = {
     totalSkills: 3,
@@ -85,24 +84,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       {/* Navigation */}
-      <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="text-2xl">🌱</div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">SkillSprout</h1>
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Link to="/skills">
-                <Button variant="ghost">Browse Skills</Button>
-              </Link>
-              <Button variant="ghost">Dashboard</Button>
-              <ThemeToggle />
-              <Button>Get Started</Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <CustomNav />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

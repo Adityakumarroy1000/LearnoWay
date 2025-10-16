@@ -1,8 +1,8 @@
 # api/serializers.py
 from rest_framework import serializers
-from .models import Course
+from .models import CourseCard
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Course
+        model = CourseCard
         fields = "__all__"   # includes name, description, video_link

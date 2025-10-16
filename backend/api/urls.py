@@ -1,9 +1,9 @@
-# api/urls.py
-from rest_framework.routers import DefaultRouter
-from .views import CourseViewSet
 from django.urls import path
 from . import views
-router = DefaultRouter()
-router.register(r'courses', CourseViewSet)   # <-- only 'courses'
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('courses/', views.CourseViewSet.as_view(
+        {'get': 'list', 'post': 'create'}), name='course-list'),
+    path('courses/<int:pk>/', views.CourseViewSet.as_view(
+        {'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='course-detail'),
+]

@@ -17,9 +17,20 @@ Including another URLconf
 # backend/urls.py
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-
+    path('nested_admin/', include('nested_admin.urls')),
     path('admin/', admin.site.urls),
-    path("api/", include("api.urls")),   # api/ prefix only here
-]
+    path("api/", include("api.urls")),
+    path("api/", include("users.urls")),
+    path("api/skills/", include("skills.urls")),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
