@@ -18,6 +18,7 @@ const API_URL = "http://127.0.0.1:8000/api/profile/";
 
 const ProfileSetup = () => {
   const [profileData, setProfileData] = useState({
+    username: "",
     firstName: "",
     lastName: "",
     bio: "",
@@ -32,7 +33,29 @@ const ProfileSetup = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("accessToken");
+      let username = localStorage.getItem("username") || "";
+      
       if (!token) return;
+      try {
+        const accountRes = await fetch("http://127.0.0.1:8000/api/get-profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (accountRes.ok) {
+          const accountData = await accountRes.json();
+          username = accountData.username || username;
+          if (username) {
+            localStorage.setItem("username", username);
+          }
+        } else if (accountRes.status === 401) {
+          console.error("Unauthorized: token may be expired or missing");
+          localStorage.removeItem("accessToken");
+          navigate("/login");
+          return;
+        }
+      } catch (err) {
+        console.error("Error fetching account info:", err);
+      }
 
       try {
         const res = await fetch(API_URL, {
@@ -42,6 +65,7 @@ const ProfileSetup = () => {
         if (res.ok) {
           const data = await res.json();
           setProfileData({
+            username: username,
             firstName: data.first_name || "",
             lastName: data.last_name || "",
             bio: data.bio || "",
@@ -138,7 +162,7 @@ const ProfileSetup = () => {
             <div className="inline-flex items-center space-x-3 mb-4">
               <div className="text-3xl animate-bounce">🌱</div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                SkillSprout
+                LearnoWay
               </h1>
             </div>
             <p className="text-gray-600 dark:text-gray-300 animate-fade-in">
@@ -181,6 +205,18 @@ const ProfileSetup = () => {
                       />
                     </label>
                   </div>
+                </div>
+
+                {/* Username Field - Read Only */}
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    name="username"
+                    value={profileData.username}
+                    disabled
+                    className="cursor-not-allowed opacity-60"
+                  />
                 </div>
 
                 {/* Name Fields */}
@@ -240,3 +276,4 @@ const ProfileSetup = () => {
 };
 
 export default ProfileSetup;
+

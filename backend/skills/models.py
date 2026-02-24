@@ -1,6 +1,7 @@
 # skils/models.py
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 
 class CourseCard(models.Model):
@@ -205,3 +206,112 @@ class Resource(models.Model):
         sub_map = self.sub_map
         super().delete(*args, **kwargs)
         sub_map.update_resources_count()
+
+
+class Quiz(models.Model):
+    """One quiz per roadmap (stage). AI-generated questions."""
+    roadmap = models.OneToOneField(
+        Roadmap, related_name="quiz", on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Quiz for {self.roadmap.title}"
+
+
+class QuizQuestion(models.Model):
+    """Multiple choice question for a quiz."""
+    quiz = models.ForeignKey(
+        Quiz, related_name="questions", on_delete=models.CASCADE
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+    question_text = models.TextField()
+    options = models.JSONField(
+        help_text="List of answer options, e.g. ['A', 'B', 'C', 'D']"
+    )
+    correct_index = models.PositiveSmallIntegerField(
+        help_text="0-based index of the correct option"
+    )
+
+    class Meta:
+        ordering = ["order"]
+
+    def __str__(self):
+        return self.question_text[:50]
+
+
+class StageProgress(models.Model):
+    """Tracks which stage (roadmap) a user has passed via exam."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="stage_progress",
+        on_delete=models.CASCADE,
+    )
+    roadmap = models.ForeignKey(
+        Roadmap, related_name="passed_by", on_delete=models.CASCADE
+    )
+    passed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = [["user", "roadmap"]]
+
+    def __str__(self):
+        return f"{self.user} passed {self.roadmap.title}"
+
+
+class ExamSession(models.Model):
+    """One-time AI-generated exam for a single attempt. Can include MC and short-answer (direct write)."""
+    session_key = models.CharField(max_length=64, unique=True, db_index=True)
+    roadmap = models.ForeignKey(
+        Roadmap, related_name="exam_sessions", on_delete=models.CASCADE
+    )
+    questions_json = models.JSONField(
+        help_text="List of {type, question_text, options?, correct_index?, expected_keywords?}"
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"ExamSession {self.session_key[:8]}…"
+
+class UserCourseTracking(models.Model):
+    """Per-user learning tracking for a course. Stored on server, not device."""
+
+    LANGUAGE_CHOICES = [
+        ("english", "English"),
+        ("bangla", "Bangla"),
+        ("hindi", "Hindi"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="course_tracking",
+        on_delete=models.CASCADE,
+    )
+    course = models.ForeignKey(
+        CourseCard,
+        related_name="user_tracking",
+        on_delete=models.CASCADE,
+    )
+    selected_path = models.ForeignKey(
+        Path,
+        related_name="selected_by_users",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    selected_language = models.CharField(
+        max_length=20,
+        choices=LANGUAGE_CHOICES,
+        default="english",
+    )
+    completed_sub_map_ids = models.JSONField(default=list, blank=True)
+    activity_by_date = models.JSONField(default=dict, blank=True)
+    last_accessed_at = models.DateTimeField(default=timezone.now)
+    last_activity_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [["user", "course"]]
+
+    def __str__(self):
+        return f"{self.user} tracking {self.course}"

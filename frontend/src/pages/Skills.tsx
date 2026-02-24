@@ -26,6 +26,9 @@ const Skills = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showGenerateHint, setShowGenerateHint] = useState(false);
+
 
   const categories = [
     "All",
@@ -39,6 +42,26 @@ const Skills = () => {
     "language",
     "health",
   ];
+
+
+
+  const normalize = (text: string = "") =>
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .trim();
+
+  const hasSimilarSkill = (query: string) => {
+    const q = normalize(query);
+    if (!q) return false;
+
+    return skills.some((skill) => {
+      const title = normalize(skill.title);
+
+      return title === q;
+    });
+  };
+
 
   // ✅ Fetch data from Django API
   useEffect(() => {
@@ -60,9 +83,11 @@ const Skills = () => {
 
   // ✅ Filter system
   const filteredSkills = skills.filter((skill) => {
-    const matchesSearch =
-      skill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      skill.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const q = normalize(searchTerm);
+    const title = normalize(skill.title);
+    const desc = normalize(skill.description || "");
+    const matchesSearch = !q || title.includes(q) || desc.includes(q);
+
     const matchesCategory =
       selectedCategory === "All" ||
       skill.category.toLowerCase() === selectedCategory.toLowerCase();
@@ -71,6 +96,30 @@ const Skills = () => {
       skill.level.toLowerCase() === skillFilter.toLowerCase();
     return matchesSearch && matchesCategory && matchesLevel;
   });
+
+  useEffect(() => {
+    const q = normalize(searchTerm);
+    const searchHasAnyMatch = skills.some((skill) => {
+      const title = normalize(skill.title);
+      const desc = normalize(skill.description || "");
+      return title.includes(q) || desc.includes(q);
+    });
+    const exactTitleExists = skills.some(
+      (skill) => normalize(skill.title) === q
+    );
+
+    if (
+      searchTerm.trim().length > 2 &&
+      !searchHasAnyMatch &&
+      !exactTitleExists
+    ) {
+      setShowGenerateHint(true);
+    } else {
+      setShowGenerateHint(false);
+    }
+  }, [searchTerm, skills]);
+
+
 
   // ✅ Loading UI
   if (loading) {
@@ -90,7 +139,6 @@ const Skills = () => {
     );
   }
 
-
   const getDifficultyColor = (level?: string) => {
     switch (level?.toLowerCase()) {
       case "beginner":
@@ -106,12 +154,68 @@ const Skills = () => {
     }
   };
 
+  // inside your Skills component
+const handleAISearch = async () => {
+  if (!searchTerm.trim()) return;
+
+  if (hasSimilarSkill(searchTerm)) {
+    setShowGenerateHint(false);
+    return;
+  }
+
+  try {
+    setAiLoading(true);
+    const storedLanguage = (localStorage.getItem("language") || "english").toLowerCase();
+    const selectedLanguage =
+      storedLanguage === "bangla" || storedLanguage === "hindi"
+        ? storedLanguage
+        : "english";
+
+    const res = await fetch(
+      "http://127.0.0.1:8000/api/skills/courses/ai-generate/",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          skill: searchTerm.trim(),
+          selected_language: selectedLanguage,
+        }),
+      }
+    );
+
+    if (!res.ok) throw new Error("AI generation failed");
+
+    const data = await res.json();
+
+    // ✅ Add the generated skill to skills
+    setSkills((prevSkills) => {
+      if (
+        prevSkills.some((s) => normalize(s.title) === normalize(data.title))
+      ) {
+        return prevSkills;
+      }
+      return [data, ...prevSkills];
+    });
+
+    // ❌ DO NOT clear the search term
+    setShowGenerateHint(false);
+  } catch (err) {
+    setError("Failed to generate skill");
+  } finally {
+    setAiLoading(false);
+  }
+};
+
+
+
+
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* 🌱 Navbar */}
       <CustomNav />
-      
 
       {/* 🌟 Main Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -136,11 +240,14 @@ const Skills = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                type="text"
-                placeholder="Search skills..."
+                placeholder="Search or type a skill..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 py-3 text-lg dark:bg-gray-800 dark:border-gray-700 transition-all duration-300 focus:scale-[1.02]"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && showGenerateHint && !aiLoading) {
+                    handleAISearch();
+                  }
+                }}
               />
             </div>
 
@@ -283,11 +390,23 @@ const Skills = () => {
         </div>
 
         {/* Empty State */}
-        {filteredSkills.length === 0 && (
+        {showGenerateHint && !aiLoading && (
           <div className="text-center py-12 animate-fade-in">
-            <div className="text-6xl mb-4 animate-bounce">🔍</div>
-            <p className="text-xl text-gray-500 dark:text-gray-400">
-              No skills found matching your search.
+            <p className="text-xl text-gray-600 dark:text-gray-300">
+              ✨ Skill........
+            </p>
+            <p className="mt-2 text-blue-600 font-semibold">
+              Press <kbd className="px-2 py-1 border rounded">Enter</kbd> to
+              get the skill
+            </p>
+          </div>
+        )}
+
+        {aiLoading && (
+          <div className="flex flex-col items-center py-12">
+            <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+            <p className="mt-3 text-gray-600 dark:text-gray-300">
+              Loading skill.......
             </p>
           </div>
         )}
@@ -297,3 +416,4 @@ const Skills = () => {
 };
 
 export default Skills;
+

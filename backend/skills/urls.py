@@ -5,7 +5,7 @@ from .views import (
     PathViewSet,
     RoadmapViewSet,
     SubMapViewSet,
-    ResourceViewSet
+    ResourceViewSet,
 )
 
 # Create a router to auto-generate routes
@@ -17,5 +17,6 @@ router.register('submaps', SubMapViewSet, basename='submaps')
 router.register('resources', ResourceViewSet, basename='resources')
 
 urlpatterns = [
-    path('', include(router.urls)),  # include all generated routes
+    path('', include(router.urls)),
+    # include all generated routes
 ]

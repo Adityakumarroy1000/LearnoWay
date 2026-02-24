@@ -15,6 +15,9 @@ import Signup from "./pages/Signup";
 import ProfileSetup from "./pages/ProfileSetup";
 import NotFound from "./pages/NotFound";
 import OtpVerify from "./pages/OtpVerify";
+import BuddyFinder from "./pages/BuddyFinder";
+import FriendRequests from "./pages/FriendRequests"
+
 
 const queryClient = new QueryClient();
 
@@ -34,6 +37,8 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify-otp" element={<OtpVerify />} />
             <Route path="/profile-setup" element={<ProfileSetup />} />
+            <Route path="/buddy-finder" element={<BuddyFinder />} />
+            <Route path="/friend-requests" element={<FriendRequests />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

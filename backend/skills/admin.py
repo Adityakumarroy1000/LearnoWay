@@ -4,9 +4,9 @@ from django.contrib import admin
 from .models import CourseCard, Path, Roadmap, SubMap,Resource
 
 # Custom Admin Branding
-admin.site.site_header = "LMS Admin"
-admin.site.site_title = "LMS Admin Portal"
-admin.site.index_title = "Welcome to LMS Admin"
+admin.site.site_header = "LearnoWay Admin"
+admin.site.site_title = "LearnoWay Admin Portal"
+admin.site.index_title = "Welcome to LearnoWay Admin"
 
 # Inline Path model inside CourseCard
 class ResourceInline(nested_admin.NestedStackedInline):
