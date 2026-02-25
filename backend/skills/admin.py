@@ -98,7 +98,7 @@ class CourseCardAdmin(nested_admin.NestedModelAdmin):
 
     class Media:
         css = {
-            'all': ('admin/css/custom_adminlte.css',),
+            'all': (r'admin/css/custom_adminlte.css',),
         }
 
 
@@ -111,7 +111,7 @@ class PathAdmin(admin.ModelAdmin):
     inlines = [RoadmapInline]
     class Media:
         css = {
-            'all': ('admin\css\custom_adminlte.css',)
+            'all': (r'admin/css/custom_adminlte.css',)
         }
 
 
