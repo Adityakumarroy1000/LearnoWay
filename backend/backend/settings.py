@@ -34,11 +34,11 @@ ENVIRONMENT = os.getenv("DJANGO_ENV", "development").strip().lower()
 DEBUG = get_bool_env("DEBUG", default=ENVIRONMENT != "production")
 IS_PRODUCTION = not DEBUG
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     if IS_PRODUCTION:
-        raise ImproperlyConfigured("DJANGO_SECRET_KEY is required in production.")
-    SECRET_KEY = "I am aditya. I am the creator of this platform. Just keep this a secret."
+        raise ImproperlyConfigured("SECRET_KEY is required in production.")
+    SECRET_KEY = "dev-only-insecure-secret-change-me"
 
 ALLOWED_HOSTS = get_list_env(
     "ALLOWED_HOSTS",
