@@ -38,7 +38,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
     if IS_PRODUCTION:
         raise ImproperlyConfigured("DJANGO_SECRET_KEY is required in production.")
-    SECRET_KEY = "dev-only-insecure-secret-change-me"
+    SECRET_KEY = "I am aditya. I am the creator of this platform. Just keep this a secret."
 
 ALLOWED_HOSTS = get_list_env(
     "ALLOWED_HOSTS",
