@@ -29,7 +29,9 @@ import os
 import shutil
 from django.conf import settings
 
-FRIEND_SERVICE = "http://localhost:4000"
+
+FRIEND_SERVICE = os.getenv("FRIEND_SERVICE_URL", "http://localhost:4000")
+
 BRAND_NAME = "LearnoWay"
 
 

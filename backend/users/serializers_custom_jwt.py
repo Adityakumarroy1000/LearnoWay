@@ -1,7 +1,9 @@
 import requests
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-FRIEND_SERVICE = "http://localhost:4000"
+import os
+FRIEND_SERVICE = os.getenv("FRIEND_SERVICE_URL", "http://localhost:4000")
+
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
