@@ -46,6 +46,7 @@ import {
   getUserSkillProgress,
   saveUserSkillProgress,
 } from "@/api/skillProgress";
+import { buildApiUrl } from "@/api/config";
 
 const SkillDetail = () => {
   const { id } = useParams();
@@ -80,7 +81,7 @@ const SkillDetail = () => {
     const fetchSkill = async () => {
       try {
         const res = await fetch(
-          `http://127.0.0.1:8000/api/skills/courses/${id}/`
+          buildApiUrl(`/skills/courses/${id}/`)
         );
         if (!res.ok) throw new Error("Failed to load skill data");
         const data = await res.json();

@@ -19,6 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import CustomNav from "@/components/CustomNavbar";
+import { buildApiUrl } from "@/api/config";
 
 function parseStudentsCount(value: string | number): number {
   if (typeof value === "number") return value;
@@ -73,7 +74,7 @@ const Index = () => {
 
     const fetchPopularSkills = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/skills/courses/");
+        const res = await fetch(buildApiUrl("/skills/courses/"));
         if (!res.ok) throw new Error("Failed to fetch courses");
 
         const data: Course[] = await res.json();

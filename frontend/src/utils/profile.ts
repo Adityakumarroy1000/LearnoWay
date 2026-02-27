@@ -1,4 +1,4 @@
-// frontend/src/utils/profile.ts
+import { BACKEND_BASE } from "@/api/config";
 
 export function normalizeProfile(raw: any) {
   return {
@@ -6,9 +6,8 @@ export function normalizeProfile(raw: any) {
     last_name: raw.last_name || "",
     bio: raw.bio || "",
     occupation: raw.occupation || "",
-    // ✅ prepend backend base URL so <img> tags work in navbar
     profile_image: raw.profile_image
-      ? `http://127.0.0.1:8000${raw.profile_image}`
+      ? `${BACKEND_BASE}${raw.profile_image}`
       : "/default-avatar.png",
   };
 }

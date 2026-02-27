@@ -23,7 +23,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { normalizeProfile } from "@/utils/profile";
-import { BACKEND_BASE } from "../api/config";
+import { BACKEND_BASE, buildApiUrl } from "../api/config";
 
 declare global {
   interface GoogleCredentialResponse {
@@ -290,7 +290,7 @@ const Login = () => {
     setMessage("");
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/token/", {
+      const res = await fetch(buildApiUrl("/token/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: email, password }),

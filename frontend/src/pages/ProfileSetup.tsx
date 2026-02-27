@@ -14,7 +14,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, User } from "lucide-react";
 import { normalizeProfile } from "../utils/profile";
 import CustomNav from "@/components/CustomNavbar";
-const API_URL = "http://127.0.0.1:8000/api/profile/";
+import { buildApiUrl } from "@/api/config";
+
+const API_URL = buildApiUrl("/profile/");
+const PROFILE_INFO_URL = buildApiUrl("/get-profile/");
 
 const ProfileSetup = () => {
   const [profileData, setProfileData] = useState({
@@ -37,7 +40,7 @@ const ProfileSetup = () => {
       
       if (!token) return;
       try {
-        const accountRes = await fetch("http://127.0.0.1:8000/api/get-profile/", {
+        const accountRes = await fetch(PROFILE_INFO_URL, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

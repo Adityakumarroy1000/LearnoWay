@@ -1,15 +1,15 @@
 import axios from "axios";
+import { FRIEND_SERVICE_URL } from "./config";
 
 
 const friendsApi = axios.create({
-  baseURL: "http://localhost:4000",
+  baseURL: FRIEND_SERVICE_URL,
 });
 
 export default friendsApi;
 
 
-const DJANGO_API = "http://localhost:8000/api";
-const FRIEND_API = "http://localhost:4000";
+const FRIEND_API = FRIEND_SERVICE_URL;
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Search, Clock, Users, Star, Filter } from "lucide-react";
 import CustomNav from "@/components/CustomNavbar";
+import { buildApiUrl } from "@/api/config";
 const Skills = () => {
   const [skills, setSkills] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,7 +68,7 @@ const Skills = () => {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/skills/courses/");
+        const res = await fetch(buildApiUrl("/skills/courses/"));
         if (!res.ok) throw new Error("Failed to fetch data");
         const data = await res.json();
         setSkills(data);
@@ -172,7 +173,7 @@ const handleAISearch = async () => {
         : "english";
 
     const res = await fetch(
-      "http://127.0.0.1:8000/api/skills/courses/ai-generate/",
+      buildApiUrl("/skills/courses/ai-generate/"),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

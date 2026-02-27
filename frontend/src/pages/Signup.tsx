@@ -22,7 +22,7 @@ import { Eye, EyeOff } from "lucide-react";
 import api from "../api/axios";
 import friendsApi from "../api/friends";
 import { normalizeProfile } from "@/utils/profile";
-import { BACKEND_BASE } from "../api/config";
+import { BACKEND_BASE, buildApiUrl } from "../api/config";
 
 declare global {
   interface GoogleCredentialResponse {
@@ -309,7 +309,7 @@ const Signup = () => {
     setMessage("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/register/", {
+      const response = await fetch(buildApiUrl("/register/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
