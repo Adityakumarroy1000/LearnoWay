@@ -1,6 +1,8 @@
 import { BACKEND_BASE } from "@/api/config";
 
 export function normalizeProfile(raw: any) {
+  const username = raw.username ?? "";
+  const email = raw.email ?? raw.emailAddress ?? "";
   const firstName = raw.first_name ?? raw.firstName ?? "";
   const lastName = raw.last_name ?? raw.lastName ?? "";
   const bio = raw.bio ?? "";
@@ -19,6 +21,8 @@ export function normalizeProfile(raw: any) {
   }
 
   return {
+    username,
+    email,
     firstName,
     lastName,
     bio,
@@ -28,5 +32,6 @@ export function normalizeProfile(raw: any) {
     first_name: firstName,
     last_name: lastName,
     profile_image: profileImage,
+    emailAddress: email,
   };
 }

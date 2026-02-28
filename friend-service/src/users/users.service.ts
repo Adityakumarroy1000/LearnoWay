@@ -33,6 +33,7 @@ export class UsersService {
     if (exists) {
       // 🔁 keep profile in sync — only update fields that are defined
       const updateData: Partial<User> = {};
+      if (user.email !== undefined && user.email !== null) updateData.email = user.email;
       if (user.fullName !== undefined && user.fullName !== null) updateData.fullName = user.fullName;
       if (user.username !== undefined && user.username !== null) updateData.username = user.username;
       if (user.avatar !== undefined) updateData.avatar = user.avatar;
@@ -105,3 +106,4 @@ export class UsersService {
     };
   }
 }
+

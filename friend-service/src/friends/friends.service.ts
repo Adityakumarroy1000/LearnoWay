@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Friend } from './entities/friend.entity';
 import { FriendRequest } from './entities/friend-request.entity';
+import { Block } from './entities/block.entity';
 
 @Injectable()
 export class FriendsService {
@@ -18,12 +19,29 @@ export class FriendsService {
 
     @InjectRepository(FriendRequest)
     private requestRepo: Repository<FriendRequest>,
+
+    @InjectRepository(Block)
+    private blockRepo: Repository<Block>,
   ) {}
+
+  private async isBlockedEitherWay(userA: string, userB: string) {
+    return this.blockRepo.findOne({
+      where: [
+        { blockerId: userA, blockedId: userB },
+        { blockerId: userB, blockedId: userA },
+      ],
+    });
+  }
 
   // 1. Send friend request
   async sendRequest(senderId: string, receiverId: string) {
     if (senderId === receiverId) {
       throw new BadRequestException('Cannot add yourself');
+    }
+
+    const blockedRelation = await this.isBlockedEitherWay(senderId, receiverId);
+    if (blockedRelation) {
+      throw new BadRequestException('Request blocked due to privacy settings');
     }
 
     // already friends
@@ -130,6 +148,37 @@ export class FriendsService {
     });
 
     return { message: 'Unfriended successfully' };
+  }
+
+  async blockUser(blockerId: string, blockedId: string) {
+    if (!blockedId) throw new BadRequestException('blockedId required');
+    if (blockerId === blockedId) {
+      throw new BadRequestException('Cannot block yourself');
+    }
+
+    const existing = await this.blockRepo.findOne({
+      where: { blockerId, blockedId },
+    });
+    if (existing) return { message: 'User already blocked' };
+
+    await this.unfriend(blockerId, blockedId);
+    await this.requestRepo.delete([
+      { senderId: blockerId, receiverId: blockedId },
+      { senderId: blockedId, receiverId: blockerId },
+    ]);
+
+    await this.blockRepo.save({ blockerId, blockedId });
+    return { message: 'User blocked successfully' };
+  }
+
+  async unblockUser(blockerId: string, blockedId: string) {
+    if (!blockedId) throw new BadRequestException('blockedId required');
+    await this.blockRepo.delete({ blockerId, blockedId });
+    return { message: 'User unblocked successfully' };
+  }
+
+  async getBlockedUsers(blockerId: string) {
+    return this.blockRepo.find({ where: { blockerId } });
   }
 
   // 🔹 SENT REQUESTS

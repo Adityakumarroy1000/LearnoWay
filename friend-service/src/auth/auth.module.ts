@@ -4,7 +4,10 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 
 function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
+  const secret =
+    process.env.JWT_SECRET ||
+    process.env.DJANGO_SECRET_KEY ||
+    process.env.SECRET_KEY;
   if (secret) return secret;
   if (process.env.NODE_ENV !== 'production') return 'dev-only-secret-change-me';
   throw new Error('JWT_SECRET is required in production');

@@ -419,6 +419,17 @@ class ProfileView(APIView):
         serializer = ProfileSerializer(profile, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
+            first_name = serializer.validated_data.get("first_name")
+            last_name = serializer.validated_data.get("last_name")
+            user_updates = []
+            if first_name is not None and request.user.first_name != first_name:
+                request.user.first_name = first_name
+                user_updates.append("first_name")
+            if last_name is not None and request.user.last_name != last_name:
+                request.user.last_name = last_name
+                user_updates.append("last_name")
+            if user_updates:
+                request.user.save(update_fields=user_updates)
             # return serializer with context to ensure image URL is absolute
             return Response(ProfileSerializer(profile, context={'request': request}).data)
         return Response(serializer.errors, status=400)
@@ -530,3 +541,5 @@ def confirm_delete_account(request):
     user.delete()
 
     return Response({"detail": "Account deleted successfully"})
+
+

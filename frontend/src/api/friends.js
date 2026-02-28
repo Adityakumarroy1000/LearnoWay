@@ -12,7 +12,7 @@ export default friendsApi;
 const FRIEND_API = FRIEND_SERVICE_URL;
 
 const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
+  Authorization: `Bearer ${localStorage.getItem("accessToken") || localStorage.getItem("token") || ""}`,
 });
 
 // 1. Get all users (Buddy Finder list)

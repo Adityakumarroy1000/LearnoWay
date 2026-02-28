@@ -144,7 +144,7 @@ const Login = () => {
 
       const syncPayload = {
         userId: data.user?.userId ?? data.user_id ?? undefined,
-        email: profileRes.data.email ?? data.user?.email ?? undefined,
+        email: profileRes.data.email ?? accountRes.data?.email ?? data.user?.email ?? undefined,
         username: actualUsername || data.user?.username || undefined,
         fullName: fullName || undefined,
         avatar: avatar ?? undefined,

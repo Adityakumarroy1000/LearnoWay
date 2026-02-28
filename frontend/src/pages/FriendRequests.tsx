@@ -4,6 +4,7 @@ import BuddyProfileModal from "./BuddyProfileModal";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { ChevronDown } from "lucide-react";
+import { BACKEND_BASE } from "../api/config";
 
 interface Request {
   id: string;
@@ -170,8 +171,8 @@ export default function FriendRequests({ defaultOpen = false }: FriendRequestsPr
                     const avatar = raw?.avatar ?? raw?.profile_image ?? raw?.profileImage;
                     if (!avatar) return "/avatar.png";
                     if (avatar.startsWith("http")) return avatar;
-                    if (avatar.startsWith("/")) return `${window.location.origin}${avatar}`;
-                    return `${window.location.origin}/${avatar}`;
+                    if (avatar.startsWith("/")) return `${BACKEND_BASE}${avatar}`;
+                    return `${BACKEND_BASE}/${avatar}`;
                   })()
                 }
                 className="w-10 h-10 rounded-full object-cover"
