@@ -1,31 +1,31 @@
+import os
 import requests
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-import os
 FRIEND_SERVICE = os.getenv("FRIEND_SERVICE_URL", "http://localhost:4000")
 
 
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @staticmethod
+    def _safe_avatar_url(user):
+        profile = getattr(user, "profile", None)
+        avatar_field = getattr(profile, "profile_image", None) if profile else None
+        if not avatar_field:
+            return None
+        try:
+            return avatar_field.url
+        except Exception:
+            return None
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
 
-        # JWT payload
         token["userId"] = user.id
         token["email"] = user.email
         token["username"] = user.username
         token["fullName"] = user.get_full_name()
-
-        # include avatar so friend-service can sync the profile when frontend
-        # calls /users/sync using this JWT
-        profile = getattr(user, "profile", None)
-        avatar_url = (
-            profile.profile_pic.url
-            if profile and getattr(profile, "profile_pic", None)
-            else None
-        )
-        token["avatar"] = avatar_url
+        token["avatar"] = cls._safe_avatar_url(user)
 
         return token
 
@@ -33,24 +33,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         user = self.user
 
-        # ✅ SAFE profile picture → avatar
-        profile = getattr(user, "profile", None)
-        avatar_url = (
-            profile.profile_pic.url
-            if profile and getattr(profile, "profile_pic", None)
-            else None
-        )
-
-        # ✅ SINGLE source of truth
         profile_data = {
             "userId": user.id,
             "email": user.email,
             "username": user.username,
             "fullName": user.get_full_name(),
-            "avatar": avatar_url,
+            "avatar": self._safe_avatar_url(user),
         }
 
-        # 🔥 Sync user to friend-service
         try:
             requests.post(
                 f"{FRIEND_SERVICE}/users/sync",
@@ -58,9 +48,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 timeout=2,
             )
         except Exception:
-            pass  # never break login
+            pass
 
-        # ✅ Attach user profile to login response
         data["user"] = profile_data
-
         return data

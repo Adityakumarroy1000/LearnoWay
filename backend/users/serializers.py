@@ -2,9 +2,25 @@ from rest_framework import serializers
 from .models import Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
-    # ensure DRF can return a URL (use_url=True). The returned URL will be absolute if serializer has request in context.
-    profile_image = serializers.ImageField(required=False, use_url=True)
+    # Return a safe URL only when the file exists (important for ephemeral storage in cloud deploys).
+    profile_image = serializers.SerializerMethodField()
 
+    def get_profile_image(self, obj):
+        image = getattr(obj, "profile_image", None)
+        if not image:
+            return None
+        try:
+            image_name = image.name
+            if not image_name or not image.storage.exists(image_name):
+                return None
+            image_url = image.url
+        except Exception:
+            return None
+
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(image_url)
+        return image_url
 
     class Meta:
         model = Profile
