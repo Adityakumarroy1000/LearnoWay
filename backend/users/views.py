@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 import random
 import json
 import secrets
+import logging
 from django.core.mail import EmailMultiAlternatives
 from django.core.files.base import ContentFile
 from .models import OTPVerification, Profile
@@ -33,6 +34,7 @@ from django.conf import settings
 FRIEND_SERVICE = os.getenv("FRIEND_SERVICE_URL", "http://localhost:4000")
 
 BRAND_NAME = "LearnoWay"
+logger = logging.getLogger(__name__)
 
 
 
@@ -99,14 +101,19 @@ def _send_branded_otp_email(recipient, subject, title, subtitle, otp_code, actio
         to=[recipient],
     )
     message.attach_alternative(html_body, "text/html")
-    message.send(fail_silently=False)
+    try:
+        message.send(fail_silently=False)
+        return True
+    except Exception:
+        logger.exception("OTP email send failed for recipient=%s", recipient)
+        return False
 
 
 def generate_and_send_otp(user):
     otp_code = str(random.randint(100000, 999999))
     OTPVerification.objects.create(user=user, otp=otp_code)
 
-    _send_branded_otp_email(
+    sent = _send_branded_otp_email(
         recipient=user.email,
         subject=f"{BRAND_NAME} • Verify Your Account",
         title="Verify your email address",
@@ -115,6 +122,8 @@ def generate_and_send_otp(user):
         action_label="Verification code",
     )
 
+    if not sent:
+        raise RuntimeError("OTP email service is unavailable. Please try again shortly.")
     return otp_code
 
 
@@ -475,9 +484,9 @@ def send_delete_otp(request):
 
     otp = generate_otp()
 
-    DeleteAccountOTP.objects.create(user=user, otp=otp)
+    otp_record = DeleteAccountOTP.objects.create(user=user, otp=otp)
 
-    _send_branded_otp_email(
+    sent = _send_branded_otp_email(
         recipient=user.email,
         subject=f"{BRAND_NAME} • Confirm Account Deletion",
         title="Confirm your account deletion request",
@@ -485,6 +494,13 @@ def send_delete_otp(request):
         otp_code=otp,
         action_label="Deletion confirmation code",
     )
+
+    if not sent:
+        otp_record.delete()
+        return Response(
+            {"error": "Email service unavailable. Please try again shortly."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
 
     return Response({"detail": "OTP sent successfully"})
 
