@@ -329,6 +329,10 @@ export default function BuddyFinder() {
                   return `${BACKEND_BASE}/${avatar}`;
                 })(user)
               }
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (!img.src.endsWith("/avatar.png")) img.src = "/avatar.png";
+              }}
               className="w-12 h-12 rounded-full object-cover"
             />
 

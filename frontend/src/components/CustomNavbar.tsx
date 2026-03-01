@@ -21,6 +21,8 @@ type NotificationItem = {
 
 const NOTIFICATION_SEEN_KEY = "nav_notifications_seen";
 const NOTIFICATION_ACTIONS_KEY = "nav_notifications_actions";
+const isLikelyBrokenCloudinaryUrl = (url: string) =>
+  url.includes("res.cloudinary.com") && url.includes("/media/profiles/");
 
 function normalizeProfile(raw: any) {
   const firstName = raw.first_name ?? raw.firstName ?? "";
@@ -32,6 +34,9 @@ function normalizeProfile(raw: any) {
   if (profileImage && !profileImage.startsWith("http")) {
     if (profileImage.startsWith("/")) profileImage = `${BACKEND_BASE}${profileImage}`;
     else profileImage = `${BACKEND_BASE}/${profileImage}`;
+  }
+  if (profileImage && profileImage.startsWith("http") && isLikelyBrokenCloudinaryUrl(profileImage)) {
+    profileImage = "/default-profile.png";
   }
 
   if (!profileImage) profileImage = "/default-profile.png";
@@ -375,7 +380,15 @@ const CustomNavbar = ({
                 >
                   <Avatar className="w-8 h-8 ring-2 ring-blue-500/20">
                     {userProfile.profileImage ? (
-                      <AvatarImage src={userProfile.profileImage} />
+                      <AvatarImage
+                        src={userProfile.profileImage}
+                        onError={(e) => {
+                          const img = e.currentTarget as HTMLImageElement;
+                          if (!img.src.endsWith("/default-profile.png")) {
+                            img.src = "/default-profile.png";
+                          }
+                        }}
+                      />
                     ) : (
                       <AvatarFallback>{userProfile.firstName?.[0] ?? "U"}</AvatarFallback>
                     )}
@@ -521,7 +534,15 @@ const CustomNavbar = ({
                 <div className="flex items-center gap-3 px-1 py-2">
                   <Avatar className="w-8 h-8 ring-2 ring-blue-500/20">
                     {userProfile.profileImage ? (
-                      <AvatarImage src={userProfile.profileImage} />
+                      <AvatarImage
+                        src={userProfile.profileImage}
+                        onError={(e) => {
+                          const img = e.currentTarget as HTMLImageElement;
+                          if (!img.src.endsWith("/default-profile.png")) {
+                            img.src = "/default-profile.png";
+                          }
+                        }}
+                      />
                     ) : (
                       <AvatarFallback>{userProfile.firstName?.[0] ?? "U"}</AvatarFallback>
                     )}

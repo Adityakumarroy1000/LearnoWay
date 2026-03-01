@@ -68,6 +68,10 @@ export default function BuddyProfileModal({ user, onClose, onRequestSent, isInco
                 return `${BACKEND_BASE}/${avatar}`;
               })(user)
             }
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.src.endsWith("/avatar.png")) img.src = "/avatar.png";
+            }}
             className="w-20 h-20 rounded-full object-cover"
           />
 

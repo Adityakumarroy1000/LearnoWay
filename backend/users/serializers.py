@@ -20,7 +20,10 @@ class ProfileSerializer(serializers.ModelSerializer):
             if (
                 isinstance(image_url, str)
                 and "res.cloudinary.com" in image_url
-                and "/image/upload/" not in image_url
+                and (
+                    "/image/upload/" not in image_url
+                    or "/media/profiles/" in image_url
+                )
             ):
                 return None
         except Exception:

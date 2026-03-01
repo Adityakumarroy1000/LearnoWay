@@ -175,6 +175,10 @@ export default function FriendRequests({ defaultOpen = false }: FriendRequestsPr
                     return `${BACKEND_BASE}/${avatar}`;
                   })()
                 }
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (!img.src.endsWith("/avatar.png")) img.src = "/avatar.png";
+                }}
                 className="w-10 h-10 rounded-full object-cover"
               />
               <div>
