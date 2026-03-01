@@ -13,7 +13,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             return None
         try:
             image_name = image.name
-            if not image_name or not image.storage.exists(image_name):
+            if not image_name:
                 return None
             image_url = image.url
         except Exception:
