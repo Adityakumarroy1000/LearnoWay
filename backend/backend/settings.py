@@ -76,6 +76,11 @@ CLOUDINARY_PACKAGES_READY = (
     importlib.util.find_spec("cloudinary_storage") is not None
     and importlib.util.find_spec("cloudinary") is not None
 )
+if IS_PRODUCTION and USE_CLOUDINARY and not CLOUDINARY_PACKAGES_READY:
+    raise ImproperlyConfigured(
+        "Cloudinary env vars are set but cloudinary packages are missing. "
+        "Install 'cloudinary' and 'django-cloudinary-storage'."
+    )
 
 if USE_CLOUDINARY and CLOUDINARY_PACKAGES_READY:
     INSTALLED_APPS += [

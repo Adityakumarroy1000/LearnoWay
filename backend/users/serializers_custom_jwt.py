@@ -45,6 +45,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             requests.post(
                 f"{FRIEND_SERVICE}/users/sync",
                 json=profile_data,
+                headers={
+                    "Authorization": f"Bearer {data.get('access', '')}",
+                    "Content-Type": "application/json",
+                },
                 timeout=2,
             )
         except Exception:
