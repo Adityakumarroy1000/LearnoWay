@@ -3,6 +3,7 @@ Django settings for backend project.
 """
 
 import os
+import importlib.util
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 from dotenv import load_dotenv
@@ -71,8 +72,12 @@ CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip()
 CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "").strip()
 CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "").strip()
 USE_CLOUDINARY = all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET])
+CLOUDINARY_PACKAGES_READY = (
+    importlib.util.find_spec("cloudinary_storage") is not None
+    and importlib.util.find_spec("cloudinary") is not None
+)
 
-if USE_CLOUDINARY:
+if USE_CLOUDINARY and CLOUDINARY_PACKAGES_READY:
     INSTALLED_APPS += [
         "cloudinary_storage",
         "cloudinary",
@@ -238,7 +243,7 @@ STORAGES = {
     },
 }
 
-if USE_CLOUDINARY:
+if USE_CLOUDINARY and CLOUDINARY_PACKAGES_READY:
     CLOUDINARY_STORAGE = {
         "CLOUD_NAME": CLOUDINARY_CLOUD_NAME,
         "API_KEY": CLOUDINARY_API_KEY,
@@ -248,8 +253,11 @@ if USE_CLOUDINARY:
     STORAGES["default"] = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     }
-    MEDIA_URL = f"https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/"
+    # Keep MEDIA_URL local-style; Cloudinary storage backend generates full CDN URLs.
+    MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / "media"
+    # Compatibility for packages still checking the legacy setting.
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / "media"
