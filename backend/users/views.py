@@ -7,7 +7,7 @@ import random
 import json
 import secrets
 import logging
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.core.files.base import ContentFile
 from .models import OTPVerification, Profile
 from django.utils import timezone
@@ -105,13 +105,44 @@ def _send_branded_otp_email(recipient, subject, title, subtitle, otp_code, actio
         message.send(fail_silently=False)
         return True
     except Exception:
-        logger.exception("OTP email send failed for recipient=%s", recipient)
-        return False
+        logger.exception("SMTP send failed on primary config for recipient=%s", recipient)
+
+    # SMTP-only resilience path: retry once via SSL/465 for Gmail.
+    try:
+        if (
+            (getattr(settings, "EMAIL_HOST", "") or "").strip().lower() == "smtp.gmail.com"
+            and bool(getattr(settings, "EMAIL_USE_TLS", False))
+            and not bool(getattr(settings, "EMAIL_USE_SSL", False))
+        ):
+            ssl_connection = get_connection(
+                fail_silently=False,
+                host=getattr(settings, "EMAIL_HOST", "smtp.gmail.com"),
+                port=465,
+                username=getattr(settings, "EMAIL_HOST_USER", ""),
+                password=getattr(settings, "EMAIL_HOST_PASSWORD", ""),
+                use_tls=False,
+                use_ssl=True,
+                timeout=getattr(settings, "EMAIL_TIMEOUT", 15),
+            )
+            ssl_message = EmailMultiAlternatives(
+                subject=subject,
+                body=text_body,
+                from_email=_email_sender(),
+                to=[recipient],
+                connection=ssl_connection,
+            )
+            ssl_message.attach_alternative(html_body, "text/html")
+            ssl_message.send(fail_silently=False)
+            return True
+    except Exception:
+        logger.exception("SMTP fallback send failed for recipient=%s", recipient)
+
+    return False
 
 
 def generate_and_send_otp(user):
     otp_code = str(random.randint(100000, 999999))
-    OTPVerification.objects.create(user=user, otp=otp_code)
+    otp_record = OTPVerification.objects.create(user=user, otp=otp_code)
 
     sent = _send_branded_otp_email(
         recipient=user.email,
@@ -123,6 +154,7 @@ def generate_and_send_otp(user):
     )
 
     if not sent:
+        otp_record.delete()
         raise RuntimeError("OTP email service is unavailable. Please try again shortly.")
     return otp_code
 
@@ -262,6 +294,7 @@ def register(request):
     if User.objects.filter(username=username).exists():
         return Response({"error": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
 
+    user = None
     try:
         user = User.objects.create_user(username=username, email=email, password=password)
         user.is_active = False
@@ -273,6 +306,10 @@ def register(request):
         generate_and_send_otp(user)
 
         return Response({"message": "User registered. Check your email for OTP."}, status=status.HTTP_201_CREATED)
+    except RuntimeError as e:
+        if user is not None:
+            user.delete()
+        return Response({"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -395,6 +432,8 @@ def resend_otp(request):
         user = User.objects.get(email=email)
         generate_and_send_otp(user)
         return Response({"message": "New OTP sent."}, status=status.HTTP_200_OK)
+    except RuntimeError as e:
+        return Response({"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
