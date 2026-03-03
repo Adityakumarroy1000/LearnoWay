@@ -49,12 +49,12 @@ export default function BuddyProfileModal({ user, onClose, onRequestSent, isInco
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-zinc-900 rounded-2xl p-6 w-[380px] relative">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-[380px] relative border border-zinc-200 dark:border-zinc-800">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-zinc-400 hover:text-white"
+          className="absolute top-3 right-3 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
         >
-          ✕
+          x
         </button>
 
         <div className="flex flex-col items-center text-center gap-3">
@@ -75,8 +75,8 @@ export default function BuddyProfileModal({ user, onClose, onRequestSent, isInco
             className="w-20 h-20 rounded-full object-cover"
           />
 
-          <h2 className="text-xl font-semibold">{user.fullName}</h2>
-          <p className="text-zinc-400">@{user.username}</p>
+          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{user.fullName}</h2>
+          <p className="text-zinc-600 dark:text-zinc-400">@{user.username}</p>
           <p className="text-sm text-zinc-500">{user.email}</p>
 
           {isIncoming ? (
@@ -113,3 +113,4 @@ export default function BuddyProfileModal({ user, onClose, onRequestSent, isInco
     </div>
   );
 }
+

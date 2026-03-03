@@ -286,7 +286,7 @@ export default function BuddyFinder() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or username"
-            className="w-full px-3 py-2 rounded border bg-white/5 placeholder:text-zinc-400"
+            className="w-full px-3 py-2 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400"
           />
         </div>
       </div>
@@ -312,12 +312,11 @@ export default function BuddyFinder() {
       }), [users, search]).map((user) => (
         <div
           key={user.djangoUserId}
-          className="flex justify-between items-center border p-3 rounded"
+          className="flex justify-between items-center border border-zinc-200 dark:border-zinc-800 p-3 rounded-lg bg-white dark:bg-zinc-950"
         >
           <div
             onClick={() => setSelectedUser(user)}
-            className="group flex items-center gap-4 p-4 rounded-xl bg-zinc-900 
-             hover:bg-zinc-800 transition cursor-pointer"
+            className="group flex items-center gap-4 p-4 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition cursor-pointer"
           >
             <img
               src={
@@ -337,10 +336,10 @@ export default function BuddyFinder() {
             />
 
             <div className="flex-1">
-              <p className="font-semibold group-hover:text-indigo-400 transition">
+              <p className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition">
                 {user.fullName}
               </p>
-              <p className="text-sm text-zinc-400">@{user.username}</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">@{user.username}</p>
             </div>
           </div>
 
