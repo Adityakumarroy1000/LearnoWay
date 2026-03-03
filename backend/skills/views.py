@@ -27,6 +27,18 @@ from .serializers import (
 EXAM_PASS_THRESHOLD = 0.7  # 70% correct to pass
 
 
+LEVEL_RANK = {
+    "beginner": 0,
+    "intermediate": 1,
+    "advanced": 2,
+}
+
+
+def _path_level_sort_key(path_data):
+    level = str(path_data.get("level") or "").strip().lower()
+    return LEVEL_RANK.get(level, 99)
+
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = CourseCard.objects.all().prefetch_related(
@@ -365,7 +377,12 @@ class CourseViewSet(viewsets.ModelViewSet):
         )
 
         # 4️⃣ Save Paths → Roadmaps → SubMaps → Resources
-        for path_data in ai_data["paths"]:
+        sorted_paths = sorted(
+            ai_data["paths"],
+            key=_path_level_sort_key,
+        )
+
+        for path_data in sorted_paths:
             path = Path.objects.create(
                 course=course,
                 title=path_data["title"],

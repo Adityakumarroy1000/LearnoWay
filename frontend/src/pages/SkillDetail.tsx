@@ -48,6 +48,19 @@ import {
 } from "@/api/skillProgress";
 import { buildApiUrl } from "@/api/config";
 
+const PATH_LEVEL_ORDER: Record<string, number> = {
+  beginner: 0,
+  intermediate: 1,
+  advanced: 2,
+};
+
+const sortPathsByLevel = (paths: any[] = []) =>
+  [...paths].sort((a, b) => {
+    const aLevel = String(a?.level || "").toLowerCase();
+    const bLevel = String(b?.level || "").toLowerCase();
+    return (PATH_LEVEL_ORDER[aLevel] ?? 99) - (PATH_LEVEL_ORDER[bLevel] ?? 99);
+  });
+
 const SkillDetail = () => {
   const { id } = useParams();
   const [skill, setSkill] = useState<any>(null);
@@ -87,12 +100,11 @@ const SkillDetail = () => {
         const data = await res.json();
 
         // ✅ normalize: ensure skill.paths contains data
+        const rawPaths =
+          data.paths && data.paths.length > 0 ? data.paths : data.path_items || [];
         const normalizedData = {
           ...data,
-          paths:
-            data.paths && data.paths.length > 0
-              ? data.paths
-              : data.path_items || [],
+          paths: sortPathsByLevel(rawPaths),
         };
 
         setSkill(normalizedData);
@@ -377,7 +389,7 @@ const SkillDetail = () => {
         {!selectedPath ? (
           <SkillPathSelector
             skillTitle={skill.title}
-            path_items={skill.path_items}
+            path_items={skill.paths}
             onPathSelect={handlePathSelect}
           />
         ) : (

@@ -424,6 +424,12 @@ def _ensure_resources(
 
 
 def _sanitize_course_payload(skill: str, data: dict, preferred_language: str = "English") -> dict:
+    level_rank = {"beginner": 0, "intermediate": 1, "advanced": 2}
+
+    def _path_sort_key(path: dict, original_index: int):
+        level = _clean_str(path.get("level"), "beginner").strip().lower()
+        return (level_rank.get(level, 99), original_index)
+
     preferred = _normalize_language(preferred_language)
     course = data.get("course") or {}
     raw_paths = data.get("paths") or []
@@ -584,6 +590,14 @@ def _sanitize_course_payload(skill: str, data: dict, preferred_language: str = "
                 ],
             }
         ]
+
+    cleaned_paths = [
+        path
+        for _, path in sorted(
+            enumerate(cleaned_paths),
+            key=lambda item: _path_sort_key(item[1], item[0]),
+        )
+    ]
 
     return {"course": cleaned_course, "paths": cleaned_paths}
 
