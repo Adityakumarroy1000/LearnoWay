@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -21,9 +20,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
 import { normalizeProfile } from "@/utils/profile";
-import { BACKEND_BASE, buildApiUrl } from "../api/config";
+import { BACKEND_BASE } from "../api/config";
 
 declare global {
   interface GoogleCredentialResponse {
@@ -91,10 +89,6 @@ async function parseApiJson(response: Response) {
 }
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [usernameModalOpen, setUsernameModalOpen] = useState(false);
@@ -284,32 +278,6 @@ const Login = () => {
     document.body.appendChild(script);
   }, [handleGoogleCredential]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage("");
-
-    try {
-      const res = await fetch(buildApiUrl("/token/"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        await finalizeLogin(data as AuthPayload);
-        navigate("/");
-      } else {
-        setMessage(data.detail || "Login failed. Check your credentials.");
-      }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      setMessage(`Sign-in failed: ${errorMessage}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -330,82 +298,25 @@ const Login = () => {
               Welcome back
             </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-300">
-              Sign in to your account to continue learning
+              Sign in with Google to continue learning
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-gray-700 dark:text-gray-300"
-                >
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-white/80 dark:bg-gray-700/80 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300"
+            {GOOGLE_CLIENT_ID ? (
+              <div className="pt-1">
+                <div className="text-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  Continue with Google
+                </div>
+                <div
+                  ref={googleButtonRef}
+                  className={`flex justify-center ${googleLoading ? "opacity-60 pointer-events-none" : ""}`}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="password"
-                  className="text-gray-700 dark:text-gray-300"
-                >
-                  Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="bg-white/80 dark:bg-gray-700/80 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 pr-10 transition-all duration-300"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
-                disabled={isLoading || googleLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Button>
-
-              {GOOGLE_CLIENT_ID ? (
-                <div className="pt-1">
-                  <div className="text-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                    or continue with
-                  </div>
-                  <div
-                    ref={googleButtonRef}
-                    className={`flex justify-center ${googleLoading ? "opacity-60 pointer-events-none" : ""}`}
-                  />
-                </div>
-              ) : null}
-            </form>
+            ) : (
+              <p className="text-center text-sm text-red-500">
+                Google login is not configured.
+              </p>
+            )}
 
             {message && (
               <p className="mt-3 text-red-500 text-center">{message}</p>
