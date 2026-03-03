@@ -502,77 +502,36 @@ def cleanup_buddy_orphans(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_delete_otp(request):
-    user = request.user
-
-
-    # ⛔ RATE LIMIT: 1 OTP per minute
-    recent = DeleteAccountOTP.objects.filter(
-        user=user,
-        created_at__gte=timezone.now() - timedelta(minutes=5)
-    ).exists()
-
-    if recent:
-        return Response(
-            {"error": "Please wait 5 minute before requesting another OTP"},
-            status=429
-        )
-
-    
-    # delete old OTPs
-    DeleteAccountOTP.objects.filter(user=user).delete()
-
-    otp = generate_otp()
-
-    otp_record = DeleteAccountOTP.objects.create(user=user, otp=otp)
-
-    sent = _send_branded_otp_email(
-        recipient=user.email,
-        subject=f"{BRAND_NAME} • Confirm Account Deletion",
-        title="Confirm your account deletion request",
-        subtitle="We received a request to permanently delete your LearnoWay account.",
-        otp_code=otp,
-        action_label="Deletion confirmation code",
+    return Response(
+        {"error": "Delete OTP is disabled. Use Google re-authentication to delete account."},
+        status=status.HTTP_410_GONE,
     )
-
-    if not sent:
-        otp_record.delete()
-        return Response(
-            {"error": "Email service unavailable. Please try again shortly."},
-            status=status.HTTP_503_SERVICE_UNAVAILABLE,
-        )
-
-    return Response({"detail": "OTP sent successfully"})
-
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def confirm_delete_account(request):
     user = request.user
-    otp = request.data.get("otp")
+    google_id_token = (request.data.get("google_id_token") or "").strip()
 
-    if not otp:
-        return Response({"error": "OTP required"}, status=400)
+    if not google_id_token:
+        return Response({"error": "google_id_token is required"}, status=400)
 
-    otp_record = DeleteAccountOTP.objects.filter(
-        user=user, otp=otp
-    ).first()
+    try:
+        payload = _verify_google_id_token(google_id_token)
+    except Exception as exc:
+        return Response({"error": str(exc)}, status=400)
 
-    if not otp_record:
-        return Response({"error": "Invalid OTP"}, status=400)
+    token_email = (payload.get("email") or "").strip().lower()
+    account_email = (user.email or "").strip().lower()
+    if not token_email or token_email != account_email:
+        return Response({"error": "Google account does not match current user"}, status=403)
 
-    if otp_record.is_expired():
-        otp_record.delete()
-        return Response({"error": "OTP expired"}, status=400)
-
-    # 🔥 DELETE USER FILES
-    # Profile image
     if hasattr(user, "profile") and user.profile.profile_image:
         try:
             user.profile.profile_image.delete(save=False)
         except Exception:
             pass
 
-    # 🔥 DELETE USER MEDIA FOLDER (OPTIONAL BUT RECOMMENDED)
     user_media_path = os.path.join(
         settings.MEDIA_ROOT, "users", str(user.id)
     )
@@ -580,9 +539,7 @@ def confirm_delete_account(request):
     if os.path.exists(user_media_path):
         shutil.rmtree(user_media_path, ignore_errors=True)
 
-    # 🔥 DELETE OTP RECORDS
     DeleteAccountOTP.objects.filter(user=user).delete()
-
 
     refresh = request.data.get("refresh")
     if refresh:
@@ -591,7 +548,6 @@ def confirm_delete_account(request):
         except Exception:
             pass
 
-    # 🔥 DELETE USER (CASCADE EVERYTHING)
     _cleanup_friend_service_user(request.META.get("HTTP_AUTHORIZATION"))
     user.delete()
 
