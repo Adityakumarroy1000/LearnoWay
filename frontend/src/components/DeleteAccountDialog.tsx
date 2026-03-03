@@ -58,9 +58,11 @@ export default function DeleteAccountDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [step, setStep] = useState<"warning" | "reauth">("warning");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [googleIdToken, setGoogleIdToken] = useState<string>("");
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
 
   const getApiMessage = (err: unknown, fallback: string) => {
@@ -77,7 +79,7 @@ export default function DeleteAccountDialog({
     }, 500);
   };
 
-  const confirmDeleteWithGoogle = async (googleIdToken: string) => {
+  const confirmDeleteWithGoogle = async () => {
     try {
       setError("");
       setNotice("");
@@ -98,7 +100,7 @@ export default function DeleteAccountDialog({
   };
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || step !== "reauth") return;
     if (!GOOGLE_CLIENT_ID) {
       setError("Google client ID missing. Contact support.");
       return;
@@ -115,7 +117,8 @@ export default function DeleteAccountDialog({
             setError("Google re-auth failed. No credential returned.");
             return;
           }
-          void confirmDeleteWithGoogle(credential);
+          setGoogleIdToken(credential);
+          setNotice("Google account verified. Click Confirm Delete to continue.");
         },
       });
       googleButtonRef.current.innerHTML = "";
@@ -145,13 +148,15 @@ export default function DeleteAccountDialog({
     script.id = "google-identity-script";
     script.onload = renderGoogleButton;
     document.body.appendChild(script);
-  }, [open]);
+  }, [open, step]);
 
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) {
+          setStep("warning");
+          setGoogleIdToken("");
           setError("");
           setNotice("");
         }
@@ -162,7 +167,9 @@ export default function DeleteAccountDialog({
         <DialogHeader>
           <DialogTitle className="text-destructive">Delete Account</DialogTitle>
           <DialogDescription>
-            This action is permanent. Re-authenticate with Google to confirm deletion.
+            {step === "warning"
+              ? "This action is permanent and cannot be undone."
+              : "Re-authenticate with Google, then confirm deletion."}
           </DialogDescription>
         </DialogHeader>
 
@@ -172,10 +179,12 @@ export default function DeleteAccountDialog({
           <p>- Images and files will be removed</p>
         </div>
 
-        <div
-          ref={googleButtonRef}
-          className={`${loading ? "opacity-60 pointer-events-none" : ""} flex justify-center`}
-        />
+        {step === "reauth" && (
+          <div
+            ref={googleButtonRef}
+            className={`${loading ? "opacity-60 pointer-events-none" : ""} flex justify-center`}
+          />
+        )}
 
         {notice && <p className="text-sm text-muted-foreground">{notice}</p>}
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -184,6 +193,27 @@ export default function DeleteAccountDialog({
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
+          {step === "warning" ? (
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setError("");
+                setNotice("");
+                setGoogleIdToken("");
+                setStep("reauth");
+              }}
+            >
+              Continue
+            </Button>
+          ) : (
+            <Button
+              variant="destructive"
+              onClick={() => void confirmDeleteWithGoogle()}
+              disabled={!googleIdToken || loading}
+            >
+              Confirm Delete
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
