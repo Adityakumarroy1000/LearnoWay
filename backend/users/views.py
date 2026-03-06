@@ -169,7 +169,7 @@ def _issue_tokens_for_user(user):
         if profile and getattr(profile, "profile_image", None)
         else None
     )
-    return {
+    payload = {
         "refresh": str(refresh),
         "access": str(access),
         "user_id": user.id,
@@ -181,6 +181,8 @@ def _issue_tokens_for_user(user):
             "avatar": avatar_url,
         },
     }
+    _sync_friend_service_user(user=user, access_token=str(access))
+    return payload
 
 
 def _verify_google_id_token(id_token):
@@ -246,6 +248,55 @@ def _cleanup_friend_service_user(authorization_header):
             return
     except Exception:
         # Never block account deletion if friend-service is unavailable.
+        return
+
+
+def _sync_friend_service_user(user, authorization_header=None, access_token=None):
+    if not user:
+        return
+
+    profile = getattr(user, "profile", None)
+    avatar_url = None
+    if profile and getattr(profile, "profile_image", None):
+        try:
+            avatar_url = profile.profile_image.url
+        except Exception:
+            avatar_url = None
+
+    token = None
+    if authorization_header and isinstance(authorization_header, str):
+        if authorization_header.lower().startswith("bearer "):
+            token = authorization_header.split(" ", 1)[1].strip()
+    if not token and access_token:
+        token = str(access_token).strip()
+    if not token:
+        return
+
+    sync_payload = json.dumps(
+        {
+            "userId": user.id,
+            "email": user.email,
+            "username": user.username,
+            "fullName": user.get_full_name(),
+            "avatar": avatar_url,
+        }
+    ).encode("utf-8")
+
+    try:
+        req = Request(
+            f"{FRIEND_SERVICE}/users/sync",
+            data=sync_payload,
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+                "User-Agent": "lms-backend/1.0",
+            },
+        )
+        with urlopen(req, timeout=5):
+            return
+    except Exception:
+        # Never block auth/profile updates if friend-service is unavailable.
         return
 
 
@@ -478,6 +529,10 @@ class ProfileView(APIView):
                 user_updates.append("last_name")
             if user_updates:
                 request.user.save(update_fields=user_updates)
+            _sync_friend_service_user(
+                user=request.user,
+                authorization_header=request.META.get("HTTP_AUTHORIZATION"),
+            )
             # return serializer with context to ensure image URL is absolute
             return Response(ProfileSerializer(profile, context={'request': request}).data)
         return Response(serializer.errors, status=400)
