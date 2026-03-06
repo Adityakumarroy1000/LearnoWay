@@ -567,6 +567,7 @@ def send_delete_otp(request):
 def confirm_delete_account(request):
     user = request.user
     google_id_token = (request.data.get("google_id_token") or "").strip()
+    authorization_header = request.META.get("HTTP_AUTHORIZATION")
 
     if not google_id_token:
         return Response({"error": "google_id_token is required"}, status=400)
@@ -603,8 +604,9 @@ def confirm_delete_account(request):
         except Exception:
             pass
 
-    _cleanup_friend_service_user(request.META.get("HTTP_AUTHORIZATION"))
+    _cleanup_friend_service_user(authorization_header)
     user.delete()
+    _prune_friend_service_orphans(authorization_header)
 
     return Response({"detail": "Account deleted successfully"})
 
