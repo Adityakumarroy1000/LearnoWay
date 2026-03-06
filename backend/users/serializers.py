@@ -16,14 +16,11 @@ class ProfileSerializer(serializers.ModelSerializer):
             if not image_name:
                 return None
             image_url = image.url
-            # If Cloudinary URL is malformed, hide it so frontend can use fallback avatar.
+            # Hide only clearly malformed Cloudinary URLs.
             if (
                 isinstance(image_url, str)
                 and "res.cloudinary.com" in image_url
-                and (
-                    "/image/upload/" not in image_url
-                    or "/media/profiles/" in image_url
-                )
+                and "/image/upload/" not in image_url
             ):
                 return None
         except Exception:
