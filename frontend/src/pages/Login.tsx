@@ -180,7 +180,7 @@ const Login = () => {
         throw new Error(firstData.error || "Google sign-in failed");
       }
 
-      await finalizeLogin(authData as AuthPayload);
+      void finalizeLogin(authData as AuthPayload);
       navigate("/");
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
@@ -223,7 +223,7 @@ const Login = () => {
       if (!secondRes.ok) {
         throw new Error(authData.error || "Google sign-in failed");
       }
-      await finalizeLogin(authData as AuthPayload);
+      void finalizeLogin(authData as AuthPayload);
       setUsernameModalOpen(false);
       setPendingGoogleToken(null);
       setGoogleSuggestedUsername("");

@@ -179,7 +179,7 @@ const Signup = () => {
         throw new Error(firstData.error || "Google signup failed");
       }
 
-      await finalizeLogin(authData as AuthPayload);
+      void finalizeLogin(authData as AuthPayload);
       navigate("/");
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
@@ -222,7 +222,7 @@ const Signup = () => {
       if (!secondRes.ok) {
         throw new Error(authData.error || "Google signup failed");
       }
-      await finalizeLogin(authData as AuthPayload);
+      void finalizeLogin(authData as AuthPayload);
       setUsernameModalOpen(false);
       setPendingGoogleToken(null);
       setGoogleSuggestedUsername("");
