@@ -71,14 +71,25 @@ const CustomNavbar = ({
         localStorage.setItem("isLoggedIn", "true");
       })
       .catch((err) => {
-        console.error("Profile fetch failed:", err);
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("userProfile");
-        localStorage.setItem("isLoggedIn", "false");
-        setUserProfile(null);
-        setIsLoggedIn(false);
-        onLoginChange?.(false);
+        const status = err?.response?.status;
+        if (status === 401 || status === 403) {
+          console.error("Profile fetch unauthorized:", err);
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("userProfile");
+          localStorage.setItem("isLoggedIn", "false");
+          setUserProfile(null);
+          setIsLoggedIn(false);
+          onLoginChange?.(false);
+          return;
+        }
+
+        // Keep session on transient errors; do not force-logout.
+        console.error("Profile fetch failed (non-auth):", err);
+        const cached = localStorage.getItem("userProfile");
+        setUserProfile(cached ? normalizeProfile(JSON.parse(cached)) : null);
+        setIsLoggedIn(true);
+        onLoginChange?.(true);
       });
   }, []);
 

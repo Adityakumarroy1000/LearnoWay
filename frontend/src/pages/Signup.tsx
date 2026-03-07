@@ -101,6 +101,8 @@ const Signup = () => {
     localStorage.setItem("accessToken", data.access);
     localStorage.setItem("refreshToken", data.refresh);
     localStorage.setItem("userId", String(data.user_id));
+    localStorage.setItem("isLoggedIn", "true");
+    window.dispatchEvent(new Event("storage"));
 
     try {
       const [profileRes, accountRes] = await Promise.all([
@@ -123,7 +125,6 @@ const Signup = () => {
 
       const normalized = normalizeProfile(profileRes.data);
       localStorage.setItem("userProfile", JSON.stringify(normalized));
-      localStorage.setItem("isLoggedIn", "true");
       window.dispatchEvent(new Event("storage"));
 
       const firstName = profileRes.data.first_name ?? profileRes.data.firstName ?? "";
