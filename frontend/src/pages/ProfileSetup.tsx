@@ -67,13 +67,14 @@ const ProfileSetup = () => {
 
         if (res.ok) {
           const data = await res.json();
+          const normalized = normalizeProfile(data);
           setProfileData({
             username: username,
             firstName: data.first_name || "",
             lastName: data.last_name || "",
             bio: data.bio || "",
             occupation: data.occupation || "",
-            profileImage: data.profile_image || "",
+            profileImage: normalized.profileImage,
           });
         } else if (res.status === 401) {
           console.error("Unauthorized: token may be expired or missing");

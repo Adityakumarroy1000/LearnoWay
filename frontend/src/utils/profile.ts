@@ -1,7 +1,7 @@
 import { BACKEND_BASE } from "@/api/config";
 
-const isLikelyBrokenCloudinaryUrl = (url: string) =>
-  url.includes("res.cloudinary.com") && url.includes("/media/profiles/");
+const isMalformedCloudinaryUrl = (url: string) =>
+  url.includes("res.cloudinary.com") && !url.includes("/image/upload/");
 
 export function normalizeProfile(raw: any) {
   const username = raw.username ?? "";
@@ -16,7 +16,7 @@ export function normalizeProfile(raw: any) {
   if (rawProfileImage) {
     if (String(rawProfileImage).startsWith("http")) {
       const absoluteUrl = String(rawProfileImage);
-      profileImage = isLikelyBrokenCloudinaryUrl(absoluteUrl)
+      profileImage = isMalformedCloudinaryUrl(absoluteUrl)
         ? "/default-profile.png"
         : absoluteUrl;
     } else if (String(rawProfileImage).startsWith("/")) {

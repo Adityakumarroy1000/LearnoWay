@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Bell, Menu, X } from "lucide-react";
 import api from "../api/axios";
 import friendsApi from "../api/friends";
-import { BACKEND_BASE } from "../api/config";
+import { normalizeProfile } from "@/utils/profile";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,28 +21,6 @@ type NotificationItem = {
 
 const NOTIFICATION_SEEN_KEY = "nav_notifications_seen";
 const NOTIFICATION_ACTIONS_KEY = "nav_notifications_actions";
-const isLikelyBrokenCloudinaryUrl = (url: string) =>
-  url.includes("res.cloudinary.com") && url.includes("/media/profiles/");
-
-function normalizeProfile(raw: any) {
-  const firstName = raw.first_name ?? raw.firstName ?? "";
-  const lastName = raw.last_name ?? raw.lastName ?? "";
-  const bio = raw.bio ?? "";
-  const occupation = raw.occupation ?? "";
-  let profileImage = raw.profile_image ?? raw.profileImage ?? "";
-
-  if (profileImage && !profileImage.startsWith("http")) {
-    if (profileImage.startsWith("/")) profileImage = `${BACKEND_BASE}${profileImage}`;
-    else profileImage = `${BACKEND_BASE}/${profileImage}`;
-  }
-  if (profileImage && profileImage.startsWith("http") && isLikelyBrokenCloudinaryUrl(profileImage)) {
-    profileImage = "/default-profile.png";
-  }
-
-  if (!profileImage) profileImage = "/default-profile.png";
-
-  return { firstName, lastName, bio, occupation, profileImage };
-}
 
 const CustomNavbar = ({
   onLoginChange,
@@ -75,7 +53,7 @@ const CustomNavbar = ({
     const token = localStorage.getItem("accessToken");
     if (!token) {
       const cached = localStorage.getItem("userProfile");
-      setUserProfile(cached ? JSON.parse(cached) : null);
+      setUserProfile(cached ? normalizeProfile(JSON.parse(cached)) : null);
       const logged = localStorage.getItem("isLoggedIn") === "true";
       setIsLoggedIn(logged);
       onLoginChange?.(logged);
@@ -107,7 +85,7 @@ const CustomNavbar = ({
   useEffect(() => {
     const syncProfile = () => {
       const profile = localStorage.getItem("userProfile");
-      setUserProfile(profile ? JSON.parse(profile) : null);
+      setUserProfile(profile ? normalizeProfile(JSON.parse(profile)) : null);
       setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     };
     window.addEventListener("storage", syncProfile);
