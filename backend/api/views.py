@@ -1,5 +1,6 @@
 # api/views.py
 from rest_framework import viewsets
+from rest_framework.response import Response
 from .models import CourseCard
 from .serializers import CourseSerializer
 from django.shortcuts import render
@@ -11,4 +12,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = CourseCard.objects.all()
     serializer_class = CourseSerializer
-    
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health_check(request):
+    return Response({"status": "ok"})
