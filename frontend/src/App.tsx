@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import OtpVerify from "./pages/OtpVerify";
 import BuddyFinder from "./pages/BuddyFinder";
 import FriendRequests from "./pages/FriendRequests"
+import ProductHuntBadge from "./components/ProductHuntBadge";
 
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <ProductHuntBadge />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

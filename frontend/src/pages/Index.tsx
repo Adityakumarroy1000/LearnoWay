@@ -315,27 +315,6 @@ const Index = () => {
             Empowering learners worldwide with free, high-quality education
             resources that make skill development accessible to everyone.
           </p>
-          <a
-            href="https://www.producthunt.com/products/learnoway-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-learnoway-2"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center mb-8"
-          >
-            <img
-              alt="LearnoWay - Learn the way you want with structured skill roadmaps. | Product Hunt"
-              width="250"
-              height="54"
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1092684&theme=light&t=1773119288878"
-              className="block dark:hidden"
-            />
-            <img
-              alt="LearnoWay - Learn the way you want with structured skill roadmaps. | Product Hunt"
-              width="250"
-              height="54"
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1092684&theme=dark&t=1773119343017"
-              className="hidden dark:block"
-            />
-          </a>
           <div className="flex items-center justify-center space-x-6 text-gray-500 text-sm">
             <span>(c) 2025 LearnoWay</span>
             <span>*</span>
