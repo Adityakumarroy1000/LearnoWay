@@ -20,6 +20,7 @@ import {
 import { Search, Clock, Users, Star, Filter } from "lucide-react";
 import CustomNav from "@/components/CustomNavbar";
 import { buildApiUrl } from "@/api/config";
+import { cachedJsonFetch, clearCacheByPrefix } from "@/utils/requestCache";
 const Skills = () => {
   const [skills, setSkills] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,9 +69,11 @@ const Skills = () => {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const res = await fetch(buildApiUrl("/skills/courses/"));
-        if (!res.ok) throw new Error("Failed to fetch data");
-        const data = await res.json();
+        const data = await cachedJsonFetch(
+          buildApiUrl("/skills/courses/"),
+          undefined,
+          { ttlMs: 5 * 60_000, cacheKey: "skills:courses:list" }
+        );
         setSkills(data);
       } catch (err) {
         setError(err.message);
@@ -187,6 +190,7 @@ const handleAISearch = async () => {
     if (!res.ok) throw new Error("AI generation failed");
 
     const data = await res.json();
+    clearCacheByPrefix("skills:courses:list");
 
     // ✅ Add the generated skill to skills
     setSkills((prevSkills) => {

@@ -20,6 +20,7 @@ import {
 import { Link } from "react-router-dom";
 import CustomNav from "@/components/CustomNavbar";
 import api from "@/api/axios";
+import { cachedJsonFetch } from "@/utils/requestCache";
 
 type DashboardSummary = {
   active_skills: number;
@@ -71,11 +72,19 @@ const Dashboard = () => {
     let mounted = true;
     const load = async () => {
       try {
-        const res = await api.get<DashboardResponse>(
-          "/skills/courses/dashboard-summary/"
+        const token = localStorage.getItem("accessToken");
+        const data = await cachedJsonFetch<DashboardResponse>(
+          `${api.defaults.baseURL}/skills/courses/dashboard-summary/`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          },
+          {
+            ttlMs: 60_000,
+            cacheKey: "dashboard:summary",
+          }
         );
         if (!mounted) return;
-        setData(res.data);
+        setData(data);
       } catch (err: unknown) {
         if (!mounted) return;
         setError(

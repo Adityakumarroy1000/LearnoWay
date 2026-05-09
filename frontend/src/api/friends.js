@@ -1,5 +1,6 @@
 import axios from "axios";
 import { FRIEND_SERVICE_URL, buildApiUrl } from "./config";
+import { cachedJsonFetch, clearCacheByPrefix } from "@/utils/requestCache";
 
 
 const friendsApi = axios.create({
@@ -53,10 +54,12 @@ const authHeaders = () => ({
 
 // 1. Get all users (Buddy Finder list)
 export async function getAllUsers() {
-  const res = await fetch(`${FRIEND_API}/users/discover`, {
+  return cachedJsonFetch(`${FRIEND_API}/users/discover`, {
     headers: authHeaders(),
+  }, {
+    ttlMs: 60_000,
+    cacheKey: "friends:users:discover",
   });
-  return res.json();
 }
 
 // 2. Send friend request
@@ -69,15 +72,18 @@ export async function sendFriendRequest(receiverId) {
     },
     body: JSON.stringify({ receiverId }),
   });
+  clearCacheByPrefix("friends:");
   return res.json();
 }
 
 // 3. Get pending friend requests
 export async function getFriendRequests() {
-  const res = await fetch(`${FRIEND_API}/friends/list`, {
+  return cachedJsonFetch(`${FRIEND_API}/friends/list`, {
     headers: authHeaders(),
+  }, {
+    ttlMs: 30_000,
+    cacheKey: "friends:list",
   });
-  return res.json();
 }
 
 // 4. Accept request
@@ -90,6 +96,7 @@ export async function acceptFriendRequest(requestId) {
     },
     body: JSON.stringify({ requestId }),
   });
+  clearCacheByPrefix("friends:");
   return res.json();
 }
 

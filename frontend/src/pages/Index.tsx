@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import CustomNav from "@/components/CustomNavbar";
 import { buildApiUrl } from "@/api/config";
+import { cachedJsonFetch } from "@/utils/requestCache";
 
 function parseStudentsCount(value: string | number): number {
   if (typeof value === "number") return value;
@@ -74,10 +75,11 @@ const Index = () => {
 
     const fetchPopularSkills = async () => {
       try {
-        const res = await fetch(buildApiUrl("/skills/courses/"));
-        if (!res.ok) throw new Error("Failed to fetch courses");
-
-        const data: Course[] = await res.json();
+        const data = await cachedJsonFetch<Course[]>(
+          buildApiUrl("/skills/courses/"),
+          undefined,
+          { ttlMs: 5 * 60_000, cacheKey: "skills:courses:list" }
+        );
         const topThree = [...data]
           .sort(
             (a, b) =>

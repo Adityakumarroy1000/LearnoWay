@@ -47,6 +47,7 @@ import {
   saveUserSkillProgress,
 } from "@/api/skillProgress";
 import { buildApiUrl } from "@/api/config";
+import { cachedJsonFetch } from "@/utils/requestCache";
 
 const PATH_LEVEL_ORDER: Record<string, number> = {
   beginner: 0,
@@ -93,11 +94,11 @@ const SkillDetail = () => {
   useEffect(() => {
     const fetchSkill = async () => {
       try {
-        const res = await fetch(
-          buildApiUrl(`/skills/courses/${id}/`)
+        const data = await cachedJsonFetch(
+          buildApiUrl(`/skills/courses/${id}/`),
+          undefined,
+          { ttlMs: 5 * 60_000, cacheKey: `skills:course:${id}` }
         );
-        if (!res.ok) throw new Error("Failed to load skill data");
-        const data = await res.json();
 
         // ✅ normalize: ensure skill.paths contains data
         const rawPaths =

@@ -15,6 +15,7 @@ import { Camera, User } from "lucide-react";
 import { normalizeProfile } from "../utils/profile";
 import CustomNav from "@/components/CustomNavbar";
 import { buildApiUrl } from "@/api/config";
+import { cachedJsonFetch, clearCacheByPrefix } from "@/utils/requestCache";
 
 const API_URL = buildApiUrl("/profile/");
 const PROFILE_INFO_URL = buildApiUrl("/get-profile/");
@@ -40,33 +41,25 @@ const ProfileSetup = () => {
       
       if (!token) return;
       try {
-        const accountRes = await fetch(PROFILE_INFO_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (accountRes.ok) {
-          const accountData = await accountRes.json();
+        const accountData = await cachedJsonFetch<any>(
+          PROFILE_INFO_URL,
+          { headers: { Authorization: `Bearer ${token}` } },
+          { ttlMs: 2 * 60_000, cacheKey: "user:get-profile" }
+        );
           username = accountData.username || username;
           if (username) {
             localStorage.setItem("username", username);
           }
-        } else if (accountRes.status === 401) {
-          console.error("Unauthorized: token may be expired or missing");
-          localStorage.removeItem("accessToken");
-          navigate("/login");
-          return;
-        }
       } catch (err) {
         console.error("Error fetching account info:", err);
       }
 
       try {
-        const res = await fetch(API_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
+          const data = await cachedJsonFetch<any>(
+            API_URL,
+            { headers: { Authorization: `Bearer ${token}` } },
+            { ttlMs: 2 * 60_000, cacheKey: "user:profile" }
+          );
           const normalized = normalizeProfile(data);
           setProfileData({
             username: username,
@@ -76,11 +69,6 @@ const ProfileSetup = () => {
             occupation: data.occupation || "",
             profileImage: normalized.profileImage,
           });
-        } else if (res.status === 401) {
-          console.error("Unauthorized: token may be expired or missing");
-          localStorage.removeItem("accessToken");
-          navigate("/login");
-        }
       } catch (err) {
         console.error("Error fetching profile:", err);
       }
@@ -138,6 +126,8 @@ const ProfileSetup = () => {
       const data = await res.json();
 
       if (res.ok) {
+        clearCacheByPrefix("user:profile");
+        clearCacheByPrefix("user:get-profile");
         const normalized = normalizeProfile(data);
         localStorage.setItem("userProfile", JSON.stringify(normalized));
         localStorage.setItem("profileCompleted", "true");

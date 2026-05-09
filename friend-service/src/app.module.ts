@@ -8,6 +8,10 @@ import { AppService } from './app.service';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const databaseUrl = process.env.DATABASE_URL?.trim();
+const useSqlite =
+  process.env.DB_TYPE?.trim().toLowerCase() === 'sqlite' ||
+  (!databaseUrl &&
+    (!process.env.DB_HOST || process.env.DB_HOST.trim().length === 0));
 
 const useSsl =
   process.env.DB_SSL === 'true' ||
@@ -16,21 +20,30 @@ const useSsl =
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      ...(databaseUrl
-        ? { url: databaseUrl }
+    TypeOrmModule.forRoot(
+      useSqlite
+        ? {
+            type: 'sqlite',
+            database: process.env.SQLITE_PATH || 'friend-service.sqlite3',
+            autoLoadEntities: true,
+            synchronize: true,
+          }
         : {
-            host: process.env.DB_HOST || 'localhost',
-            port: Number(process.env.DB_PORT || 5432),
-            username: process.env.DB_USERNAME || 'postgres',
-            password: process.env.DB_PASSWORD || '',
-            database: process.env.DB_NAME || 'friends_db',
-          }),
-      ssl: useSsl ? { rejectUnauthorized: false } : false,
-      autoLoadEntities: true,
-      synchronize: process.env.DB_SYNCHRONIZE === 'true' && !isProduction,
-    }),
+            type: 'postgres',
+            ...(databaseUrl
+              ? { url: databaseUrl }
+              : {
+                  host: process.env.DB_HOST || 'localhost',
+                  port: Number(process.env.DB_PORT || 5432),
+                  username: process.env.DB_USERNAME || 'postgres',
+                  password: String(process.env.DB_PASSWORD ?? ''),
+                  database: process.env.DB_NAME || 'friends_db',
+                }),
+            ssl: useSsl ? { rejectUnauthorized: false } : false,
+            autoLoadEntities: true,
+            synchronize: process.env.DB_SYNCHRONIZE === 'true' && !isProduction,
+          }
+    ),
     AuthModule,
     UsersModule,
     FriendsModule,
