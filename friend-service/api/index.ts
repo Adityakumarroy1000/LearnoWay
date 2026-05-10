@@ -26,8 +26,12 @@ function getCorsOrigins(): string[] {
 
 async function bootstrap() {
   const server = express();
+  server.use(express.json());
+  server.use(express.urlencoded({ extended: true }));
+
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
     logger: ['error', 'warn'],
+    bodyParser: false,
   });
 
   app.enableCors({
