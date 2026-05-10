@@ -6,7 +6,13 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 
 import { AppModule } from '../src/app.module';
 
+// Some serverless runtimes can be configured to throw on deprecations.
+// Express 4 may emit deprecations internally; do not crash the whole function for that.
+process.throwDeprecation = false;
+process.traceDeprecation = false;
+
 let cachedServer: ReturnType<typeof express> | null = null;
+let bootstrapError: unknown = null;
 
 function getCorsOrigins(): string[] {
   const fromEnv = (process.env.CORS_ALLOWED_ORIGINS || '')
@@ -34,9 +40,19 @@ async function bootstrap() {
 }
 
 export default async function handler(req: any, res: any) {
-  if (!cachedServer) {
-    cachedServer = await bootstrap();
+  if (bootstrapError) {
+    console.error('[friend-service] previous bootstrap error', bootstrapError);
+    return res.status(500).json({ error: 'Service failed to initialize' });
   }
 
-  return cachedServer(req, res);
+  try {
+    if (!cachedServer) {
+      cachedServer = await bootstrap();
+    }
+    return cachedServer(req, res);
+  } catch (error) {
+    bootstrapError = error;
+    console.error('[friend-service] bootstrap/handler error', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 }
